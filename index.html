@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Gesture Collector (Fixed)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <style>
+        body { font-family: sans-serif; background-color: #222; color: white; text-align: center; }
+        
+        /* CONTAINER TO STACK VIDEO AND CANVAS PERFECTLY */
+        .video-container {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            margin: 0 auto;
+            border: 3px solid #00ff00;
+            background-color: black;
+        }
+
+        /* Both elements must be absolute to overlap exactly */
+        video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 640px; height: 480px;
+            transform: scaleX(-1); /* Mirror */
+            opacity: 0.5; /* Dim the video slightly so you can see the skeleton better */
+        }
+
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 640px; height: 480px;
+            transform: scaleX(-1); /* Mirror to match video */
+        }
+
+        .controls { margin-top: 20px; padding: 10px; background: #333; }
+        select, button { padding: 10px; font-size: 16px; margin: 5px; }
+        #status { font-weight: bold; font-size: 1.2em; color: yellow; }
+    </style>
+</head>
+<body>
+
+    <h2>Phase 2: Dynamic Sequence Recorder</h2>
+    
+    <div class="video-container">
+        <video id="input_video"></video>
+        <canvas id="output_canvas" width="640" height="480"></canvas>
+    </div>
+
+    <div class="controls">
+        <label>Gesture:</label>
+        <select id="gestureLabel">
+            <option value="3_Stop">3 - Stop</option>
+            <option value="4_Hotel">4 - Hotel</option>
+            <option value="7_Toilet">7 - Toilet</option>
+            <option value="8_Taxi">8 - Taxi</option>
+            <option value="12_Hello">12 - Hello</option>
+            <option value="13_Direction">13 - Direction</option>
+            <option value="14_ThankYou">14 - Thank You</option>
+        </select>
+        <br>
+        <button id="recordBtn" style="background-color: #ff9800; color: white;">📹 Record Sequence (30 Frames)</button>
+        <button onclick="downloadData()">💾 Download JSON</button>
+        <p>Samples: <span id="counter">0</span></p>
+        <p id="status">Wait for camera...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

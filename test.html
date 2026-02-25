@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Gesture Tester</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    
+    <style>
+        body { font-family: sans-serif; background-color: #111; color: white; text-align: center; }
+        .video-container {
+            position: relative; width: 640px; height: 480px; margin: 0 auto;
+            border: 3px solid #00ff00; background-color: black;
+        }
+        video {
+            position: absolute; top: 0; left: 0; width: 640px; height: 480px;
+            transform: scaleX(-1); opacity: 0.5;
+        }
+        canvas {
+            position: absolute; top: 0; left: 0; width: 640px; height: 480px;
+            transform: scaleX(-1);
+        }
+        #predictionResult { font-size: 2em; color: lime; margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+    <h2>Phase 3: Live AI Recognition</h2>
+    <div id="predictionResult">Prediction: Waiting for hand...</div>
+    
+    <div class="video-container">
+        <video id="input_video"></video>
+        <canvas id="output_canvas" width="640" height="480"></canvas>
+    </div>
+
+    <script src="test.js"></script>
+</body>
+</html>
