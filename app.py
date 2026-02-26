@@ -7,15 +7,13 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Load the NEW Kaggle Alphabet Model
 model_path = os.path.join('model_output', 'alphabet_model.pkl')
-print(f"Loading Model from: {model_path}...")
 with open(model_path, 'rb') as f:
     model = pickle.load(f)
-print("Model Loaded. Server Ready!")
+print("V3 Model Loaded!")
 
 def preprocess_landmarks(landmarks_list):
-    """ Converts raw coordinates to Relative 2D Coordinates """
+    """ V3 Logic: Relative + Scale Normalized """
     if len(landmarks_list) == 0:
         return np.zeros(42)
 
@@ -23,43 +21,35 @@ def preprocess_landmarks(landmarks_list):
     wx, wy = wrist['x'], wrist['y']
     
     features = []
+    # 1. Subtract Wrist
     for lm in landmarks_list:
         features.extend([lm['x'] - wx, lm['y'] - wy])
-    
-    return np.array(features)
+        
+    # 2. Normalize Scale (Divide by max distance)
+    max_val = np.max(np.abs(features))
+    if max_val > 0:
+        features = np.array(features) / max_val
+    else:
+        features = np.array(features)
+        
+    return features.reshape(1, -1)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.json
         landmarks = data.get('landmarks', [])
-        handedness = data.get('handedness', [])
         
-        # Prepare empty slots for Left and Right hands
-        left_hand_features = np.zeros(42)
-        right_hand_features = np.zeros(42)
-        
-        # Map detected hands to the correct slots
-        for i in range(len(landmarks)):
-            hand_label = handedness[i]['label'] # "Left" or "Right"
-            features = preprocess_landmarks(landmarks[i])
+        if len(landmarks) == 0:
+            return jsonify({'gesture': 'None', 'confidence': 0.0})
             
-            # Note: MediaPipe selfie-camera is mirrored. 
-            # If the model predicts poorly, swap 'Left' and 'Right' here!
-            if hand_label == 'Left':
-                left_hand_features = features
-            elif hand_label == 'Right':
-                right_hand_features = features
-                
-        # Combine exactly as trained: Left first, then Right
-        final_features = np.concatenate([left_hand_features, right_hand_features]).reshape(1, -1)
+        # We only process the PRIMARY (first) hand detected to match our new logic
+        final_features = preprocess_landmarks(landmarks[0])
         
-        # Predict
         prediction = model.predict(final_features)[0]
         confidence = np.max(model.predict_proba(final_features))
         
-        # Filter low confidence
-        if confidence < 0.4:
+        if confidence < 0.3:
             prediction = "Unsure"
         
         return jsonify({
