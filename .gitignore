@@ -1,7 +1,24 @@
 Dataset/*
 isl_kaggle_dataset.csv
 original_images/*
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
 
+# Large datasets
+*.csv
+dataset/
+data/
+
+# Trained ML models
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
 
 
 # from flask import Flask, request, jsonify
