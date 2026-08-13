@@ -1,0 +1,137 @@
+Dataset/*
+isl_kaggle_dataset.csv
+original_images/*
+
+
+
+# from flask import Flask, request, jsonify
+# from flask_cors import CORS
+# import pickle
+# import numpy as np
+# import os
+
+# app = Flask(__name__)
+# CORS(app)
+
+# model_path = os.path.join('model_output', 'alphabet_model.pkl')
+# print("Loading V3 Model...")
+# with open(model_path, 'rb') as f:
+#     model = pickle.load(f)
+# print("Model Loaded. Server Ready!")
+
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     try:
+#         data = request.json
+#         landmarks = data.get('landmarks', [])
+
+#         if not landmarks or len(landmarks) == 0:
+#             return jsonify({'gesture': 'Waiting...', 'confidence': 0.0})
+
+#         # --- Helper: assign "left" & "right" by wrist x (same logic as training) ---
+#         def assign_hands(hands_list, flip_x=False):
+#             wrists = []
+#             for hand in hands_list:
+#                 if not hand or len(hand) < 21:
+#                     continue
+#                 x = hand[0]['x']
+#                 if flip_x:
+#                     x = 1.0 - x
+#                 wrists.append((x, hand))
+
+#             if not wrists:
+#                 return None, None
+
+#             wrists.sort(key=lambda t: t[0])  # smaller x = left side
+#             left = wrists[0][1]
+#             right = wrists[-1][1] if len(wrists) > 1 else None
+#             return left, right
+
+#         # --- Helper: build V3 features from given hands (optionally mirroring x) ---
+#         def build_features(flip_x=False):
+#             left_raw, right_raw = assign_hands(landmarks, flip_x=flip_x)
+#             has_left = left_raw is not None
+#             has_right = right_raw is not None
+
+#             if not has_left and not has_right:
+#                 return None
+
+#             def get_xy(pt):
+#                 x = pt['x']
+#                 y = pt['y']
+#                 if flip_x:
+#                     x = 1.0 - x
+#                 return x, y
+
+#             # Anchor & scale
+#             anchor = left_raw[0] if has_left else right_raw[0]
+#             ax, ay = get_xy(anchor)
+
+#             ref_hand = left_raw if has_left else right_raw
+#             rx, ry = get_xy(ref_hand[9])
+#             dx = rx - ax
+#             dy = ry - ay
+#             scale = np.sqrt(dx * dx + dy * dy) + 1e-6
+
+#             feats = []
+
+#             # LEFT hand
+#             for i in range(21):
+#                 if has_left:
+#                     lx, ly = get_xy(left_raw[i])
+#                     feats.extend([(lx - ax) / scale, (ly - ay) / scale])
+#                 else:
+#                     feats.extend([0.0, 0.0])
+
+#             # RIGHT hand
+#             for i in range(21):
+#                 if has_right:
+#                     rx_i, ry_i = get_xy(right_raw[i])
+#                     feats.extend([(rx_i - ax) / scale, (ry_i - ay) / scale])
+#                 else:
+#                     feats.extend([0.0, 0.0])
+
+#             return np.array(feats, dtype=np.float32).reshape(1, -1)
+
+#         # Build features for original and mirrored
+#         feats_orig = build_features(flip_x=False)
+#         feats_flip = build_features(flip_x=True)
+
+#         if feats_orig is None and feats_flip is None:
+#             return jsonify({'gesture': 'Waiting...', 'confidence': 0.0})
+
+#         # Predict with both; pick higher confidence
+#         best_pred = "Unsure"
+#         best_conf = 0.0
+
+#         if feats_orig is not None:
+#             probs_o = model.predict_proba(feats_orig)[0]
+#             idx_o = np.argmax(probs_o)
+#             conf_o = float(probs_o[idx_o])
+#             if conf_o > best_conf:
+#                 best_conf = conf_o
+#                 best_pred = model.classes_[idx_o]
+
+#         if feats_flip is not None:
+#             probs_f = model.predict_proba(feats_flip)[0]
+#             idx_f = np.argmax(probs_f)
+#             conf_f = float(probs_f[idx_f])
+#             if conf_f > best_conf:
+#                 best_conf = conf_f
+#                 best_pred = model.classes_[idx_f]
+
+#         # Optional rejection threshold (tune as you like)
+#         if best_conf < 0.35:
+#             best_pred = "Unsure"
+
+#         return jsonify({
+#             'gesture': str(best_pred),
+#             'confidence': float(best_conf)
+#         })
+
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return jsonify({'error': str(e)})
+
+# if __name__ == '__main__':
+#     app.run(port=5000, debug=True)
